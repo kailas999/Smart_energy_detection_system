@@ -101,7 +101,7 @@ async def generate_sensor_data_loop():
                         "state": db_sensor.state
                     }
                     
-                    is_anomaly, score, a_type, msg, rec = anomaly_detector.predict(data_point)
+                    is_anomaly, score, a_type, msg, rec = await anomaly_detector.predict_async(data_point, machine.name)
                     
                     if is_anomaly:
                         anomaly_log = schemas.AnomalyLogCreate(

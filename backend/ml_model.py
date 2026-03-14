@@ -2,6 +2,8 @@ import pandas as pd
 from sklearn.ensemble import IsolationForest
 import joblib
 import os
+import asyncio
+from llm_service import generate_anomaly_insight
 
 MODEL_PATH = "isolation_forest_model.pkl"
 
@@ -27,14 +29,15 @@ class EnergyAnomalyDetector:
         joblib.dump(self.model, MODEL_PATH)
         return True, "Model trained successfully"
 
-    def predict(self, data_point: dict):
+    async def predict_async(self, data_point: dict, machine_name: str = "Unknown"):
         """
-        Predict if a single data point is an anomaly.
-        data_point: dict with keys matching features, plus 'state' for classification.
+        Async wrapper for prediction to allow fetching LLM insights.
         Returns: (is_anomaly (bool), anomaly_score (float), anomaly_type (str), alert_message (str), recommendation (str))
         """
         if not self.is_trained:
-            return False, 0.0, None, None, None
+            self.load_model()
+            if not self.is_trained:
+                return False, 0.0, None, None, None
             
         df = pd.DataFrame([data_point])
         features = df[['power_consumption', 'idle_duration']]
@@ -73,7 +76,26 @@ class EnergyAnomalyDetector:
                 alert_message = "⚠️ Energy Leak Detected: Unusual power consumption patterns."
                 recommendation = "Suggested Action: Monitor system usage to identify the cause."
 
+            # Fetch LLM insight
+            try:
+                llm_alert, llm_rec = await generate_anomaly_insight(
+                    machine_name, state, power, idle_duration, anomaly_type
+                )
+                if llm_alert and llm_rec:
+                    alert_message = f"🤖 AI Insight: {llm_alert}"
+                    recommendation = llm_rec
+            except Exception as e:
+                print(f"Error calling LLM: {e}")
+
         return is_anomaly, float(score), anomaly_type, alert_message, recommendation
+
+    def predict(self, data_point: dict):
+        """
+        Synchronous wrapper to maintain compatibility.
+        Defaults machine name to Unknown so we don't break existing sync code
+        if someone calls it directly without async context.
+        """
+        return asyncio.run(self.predict_async(data_point, "Unknown"))
 
     def load_model(self):
         if os.path.exists(MODEL_PATH):
