@@ -52,3 +52,64 @@ class AnomalyLog(AnomalyLogBase):
 
     class Config:
         from_attributes = True
+
+# --- Auth Schemas ---
+
+class UserBase(BaseModel):
+    username: str
+    role: str = "viewer"
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class UserCreate(UserBase):
+    password: str
+
+class User(UserBase):
+    id: int
+    requires_password_change: bool
+
+    class Config:
+        from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    requires_password_change: bool = False
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+    role: Optional[str] = None
+
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+
+# --- Predictive Maintenance Schemas ---
+
+class MaintenanceForecastBase(BaseModel):
+    machine_id: int
+    health_score: float
+    estimated_days_to_failure: int
+    maintenance_recommended: bool
+
+class MaintenanceForecast(MaintenanceForecastBase):
+    id: int
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Sustainability Schemas ---
+
+class SustainabilityMetrics(BaseModel):
+    carbon_footprint_kg: float
+    energy_consumed_kwh: float
+    tips: List[str]
+
+# --- Voice Command Schemas ---
+
+class VoiceCommandRequest(BaseModel):
+    command: str
+

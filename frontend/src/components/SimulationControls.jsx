@@ -1,11 +1,16 @@
-import React from 'react';
-import { Play, Square } from 'lucide-react';
+import React, { useContext } from 'react';
+import { Play, Square, Cpu } from 'lucide-react';
 import axios from 'axios';
+import { AuthContext } from '../AuthContext';
 
 const SimulationControls = ({ simulationState, setSimulationState }) => {
+  const { token } = useContext(AuthContext);
+
   const toggleSimulation = async (state) => {
     try {
-      await axios.post(`http://localhost:8000/start-simulation?state=${state}`);
+      await axios.post(`http://localhost:8000/start-simulation?state=${state}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setSimulationState(state);
     } catch (error) {
       console.error("Error toggling simulation:", error);
@@ -13,31 +18,45 @@ const SimulationControls = ({ simulationState, setSimulationState }) => {
   };
 
   return (
-    <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 mb-6 flex items-center justify-between">
-      <div>
-        <h2 className="text-xl font-semibold mb-2">Virtual Sensor Generator</h2>
-        <p className="text-gray-400 text-sm">
-          Simulates persona-driven data (Student Laptops & Office Desktops)
-        </p>
+    <div className="card" style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{
+          width: '42px', height: '42px', borderRadius: '12px',
+          background: simulationState ? 'linear-gradient(135deg, #059669, #047857)' : 'var(--bg-secondary)',
+          border: `1px solid ${simulationState ? '#059669' : 'var(--border)'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.3s',
+          boxShadow: simulationState ? '0 0 16px #05966940' : 'none'
+        }}>
+          <Cpu size={20} color={simulationState ? '#fff' : '#4b6080'} />
+        </div>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text-primary)' }}>Virtual Sensor Generator</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+            {simulationState
+              ? <span style={{ color: '#34d399' }}>● Simulating · Student Laptops &amp; Office Desktops</span>
+              : 'Start to generate live sensor data from virtual machines'}
+          </div>
+        </div>
       </div>
-      
-      <div className="flex gap-4">
-        {simulationState ? (
-          <button 
-            onClick={() => toggleSimulation(false)}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-          >
-            <Square size={18} /> Stop Simulation
-          </button>
-        ) : (
-          <button 
-            onClick={() => toggleSimulation(true)}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-          >
-            <Play size={18} /> Start Simulation
-          </button>
-        )}
-      </div>
+
+      {simulationState ? (
+        <button
+          onClick={() => toggleSimulation(false)}
+          className="btn-danger"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+        >
+          <Square size={15} /> Stop Simulation
+        </button>
+      ) : (
+        <button
+          onClick={() => toggleSimulation(true)}
+          className="btn-success"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+        >
+          <Play size={15} /> Start Simulation
+        </button>
+      )}
     </div>
   );
 };

@@ -44,3 +44,26 @@ class AnomalyLog(Base):
     recommendation = Column(String, nullable=True) # Actionable recommendation
 
     machine = relationship("Machine", back_populates="anomaly_logs")
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    role = Column(String, default="viewer") # admin, operator, viewer
+    requires_password_change = Column(Boolean, default=True)
+
+class MaintenanceForecast(Base):
+    __tablename__ = "maintenance_forecasts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    machine_id = Column(Integer, ForeignKey("machines.id"))
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    health_score = Column(Float) # 0.0 to 100.0
+    estimated_days_to_failure = Column(Integer)
+    maintenance_recommended = Column(Boolean, default=False)
+    
+    machine = relationship("Machine")
+

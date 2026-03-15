@@ -29,9 +29,15 @@ backend/venv/
 *.sqlite3
 backend/*.sqlite3
 
-# Machine Learning
+# Machine Learning / AI models (large binaries)
 *.pkl
 backend/*.pkl
+*.onnx
+backend/*.onnx
+*.bin
+backend/*.bin
+*.pt
+*.pth
 
 # Node
 node_modules/
