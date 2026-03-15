@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 import crud, schemas, models
 from database import SessionLocal
 from ml_model import anomaly_detector
+import notifier
 
 is_simulating = False
 
@@ -115,6 +116,17 @@ async def generate_sensor_data_loop():
                         )
                         crud.create_anomaly_log(db, anomaly_log)
                         print(f"🚨 Anomaly Detected on Machine {machine.name}! Score: {score}, Type: {a_type}")
+
+                        # Trigger mobile notification immediately
+                        if msg and rec:
+                            # Send Telegram alert directly and await it to prevent dropped tasks 
+                            await notifier.send_telegram_alert(
+                                machine_name=machine.name,
+                                score=score,
+                                anomaly_type=a_type,
+                                alert_message=msg,
+                                recommendation=rec
+                            )
 
             except Exception as e:
                 print(f"Error in data generation loop: {e}")
